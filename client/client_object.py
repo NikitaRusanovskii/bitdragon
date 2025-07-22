@@ -6,14 +6,15 @@ class Client:
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
+        self.sock = None
 
     def punch(self, friend_ip, friend_port):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind(('', self.port))
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(('', self.port))
 
-        kp = Keeper(sock, (friend_ip, int(friend_port)))
+        kp = Keeper(self.sock, (friend_ip, int(friend_port)))
 
-        sock.sendto(b'Hello from peer', (friend_ip, int(friend_port)))
+        self.sock.sendto(b'Hello from peer', (friend_ip, int(friend_port)))
         kp.start()
 
         threading.Thread(target=self.receiver_loop, daemon=True).start()
@@ -22,7 +23,7 @@ class Client:
             msg = str(input('type your msg > '))
             if msg == 'exit':
                 break
-            sock.sendto(msg.encode(), (friend_ip, int(friend_port)))
+            self.sock.sendto(msg.encode(), (friend_ip, int(friend_port)))
 
 
     def receiver_loop(self):
