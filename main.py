@@ -5,8 +5,8 @@ def main():
     peer = Peer()
     client = Client(peer.external_ip, peer.external_port)
 
-    friend_ip = input()
-    friend_port = input()
+    friend_ip = input('friend ip: ')
+    friend_port = input('friend port: ')
 
     client.punch(friend_ip=friend_ip, friend_port=friend_port)
     
