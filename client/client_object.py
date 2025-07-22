@@ -11,7 +11,7 @@ class Client:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(('', self.port))
 
-        kp = Keeper(sock, (friend_ip, friend_port))
+        kp = Keeper(sock, (friend_ip, int(friend_port)))
 
         sock.sendto(b'Hello from peer', (friend_ip, int(friend_port)))
         kp.start()
@@ -22,7 +22,7 @@ class Client:
             msg = str(input('type your msg > '))
             if msg == 'exit':
                 break
-            sock.sendto(msg.encode(), (friend_ip, friend_port))
+            sock.sendto(msg.encode(), (friend_ip, int(friend_port)))
 
 
     def receiver_loop(self):
