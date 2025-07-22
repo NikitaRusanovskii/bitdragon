@@ -3,9 +3,10 @@ import threading
 from liveKeeper import Keeper
 
 class Client:
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, name):
         self.ip = ip
         self.port = port
+        self.name = name
         self.sock = None
 
     def punch(self, friend_ip, friend_port):
@@ -30,7 +31,9 @@ class Client:
         while True:
             try:
                 data, addr = self.sock.recvfrom(1024)
-                print(f"[RECV]:\n{data.decode()}\nfrom\n{addr}")
+                dd = data.decode()
+                if dd != str(addr[1]) and dd.rstrip() != '':
+                    print(f"{self.name}: \n{data.decode()}\n")
             except Exception as ex:
                 print(f'!Error:\n{ex}')
                 break

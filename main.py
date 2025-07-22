@@ -2,6 +2,9 @@ from Peer import Peer
 from client import Client
 
 def main():
+
+    name = input('your name: ')
+
     peer = Peer()
     client = Client(peer.external_ip, peer.external_port)
 
