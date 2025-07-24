@@ -19,7 +19,7 @@ class Connector(threading.Thread):
         self.sock.bind(('', self.my_port))
 
         kp = Keeper(self.sock, (self.peer_ip, self.peer_port))
-        self.sock.sendto(b'Hello from peer', (self.peer_ip, self.peer_port))
+        #self.sock.sendto(b'Hello from peer', (self.peer_ip, self.peer_port))
         kp.start()
 
     def work_loop(self):
