@@ -1,17 +1,25 @@
-from Peer import Peer
-from client import Client
+from network import Peer
+from network import Client
 
 def main():
 
-    name = input('your name: ')
+    '''name = input('> input name: ')
+    #peer = Peer()
 
+    my_port = int(input('> input your port: '))
+    port = int(input('> input friend port: '))
+
+    client = Client(('127.0.0.1', my_port), name, {'friend': ('127.0.0.1', port)})'''
+
+    name = input('> input name: ')
     peer = Peer()
-    client = Client(peer.external_ip, peer.external_port)
 
-    friend_ip = input('friend ip: ')
-    friend_port = input('friend port: ')
+    ip = input('> input friend ip: ')
+    port = int(input('> input friend port: '))
 
-    client.punch(friend_ip=friend_ip, friend_port=friend_port)
+    client = Client(peer.get_addr(), name, {'friend': (ip, port)})
+
+    client.start()
     
         
 

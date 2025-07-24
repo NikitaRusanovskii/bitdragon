@@ -7,3 +7,6 @@ class Peer:
         if result[2] and len(result) == 3:
             nat_type, self.external_ip, self.external_port = result
             print('[!] Successful [!]')
+
+    def get_addr(self):
+        return (self.external_ip, self.external_port)
