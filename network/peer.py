@@ -2,6 +2,7 @@ import stun
 
 
 class Peer:
+    """Обращается к Stun-сервера, получает временно-открытый порт и внешний айпи."""
     def __init__(self):
         result = stun.get_ip_info()
         if result[2] and len(result) == 3:
