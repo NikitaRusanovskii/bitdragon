@@ -3,13 +3,16 @@ from fastapi.responses import FileResponse
 from sqlmodel import select
 import os
 import shutil
+import logging
 
 from models import *
 from db_config import *
 
 UPLOAD_DIR = "meta_files"
+NOT_FOUND = "Meta-file not found."
 
 app = FastAPI(lifespan=lifespan)
+logger = logging.getLogger(__name__)
 
 
 @app.get('/meta_files/{file_name}/peers')
@@ -29,8 +32,11 @@ def get_peers(file_name: str, session: SessionDep) -> list:
         select(DHT).where(DHT.meta_file==file_name)
     ).all()
     if not results:
-        raise HTTPException(status_code=404, detail="Meta-file not found.")
-    return [r.peers for r in results]
+        logger.info(f'Error in func get_peers\nstatus_code: 404, detail: {NOT_FOUND}')
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
+    peers = [r.peers for r in results]
+    logger.info(f'Func get_peers: successful, result:\n{peers}')
+    return peers
 
 @app.get('/meta_files')
 def get_meta_files(session: SessionDep) -> list:
@@ -43,8 +49,11 @@ def get_meta_files(session: SessionDep) -> list:
     
     results =  session.exec(select(DHT)).all()
     if not results:
-        raise HTTPException(status_code=404, detail='Meta-files not found.')
-    return [r.meta_file for r in results]
+        logger.info(f'Error in func get_meta_files\nstatus_code: 404, detail: {NOT_FOUND}')
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
+    meta_files = [r.meta_file for r in results]
+    logger.info(f'Func get_peers: successful, result:\n{meta_files}')
+    return meta_files
 
 @app.delete('/meta_files/{file_name}')
 def delete_meta_file(file_name: str, session: SessionDep):
@@ -57,9 +66,11 @@ def delete_meta_file(file_name: str, session: SessionDep):
         dict: подтверждение успешности операции"""
     file = session.exec(select(DHT).where(DHT.meta_file == file_name)).first()
     if not file:
-        raise HTTPException(status_code=404, detail='Meta-file not found.')
+        logger.info(f'Error in func delete_meta_file\nstatus_code: 404, detail: {NOT_FOUND}')
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
     session.delete(file)
     session.commit()
+    logger.info('Func delete_meta_file: successful')
     return {'successful' : True}
 
 @app.post('/register')
@@ -75,12 +86,14 @@ def create_distribution(new_dist: DistributionModel, session: SessionDep):
     session.add(new_entry)
     session.commit()
     session.refresh(new_entry)
-    return {
+    res = {
         'successful': True,
         'id': new_entry.id,
         'meta_file': new_entry.meta_file,
         'peers': new_entry.peers
     }
+    logger.info(f'Func create_distribution: successful, result:\n{res}')
+    return res
 
 @app.patch('/meta_files/{file_name}')
 def update_DHT(file_name: str, dist_upd: DistributionUpdate, session: SessionDep):
@@ -95,20 +108,22 @@ def update_DHT(file_name: str, dist_upd: DistributionUpdate, session: SessionDep
     
     dist = session.exec(select(DHT).where(DHT.meta_file==file_name)).first()
     if not dist:
-        raise HTTPException(status_code=404, detail='Meta-file not found.')
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
     if dist_upd.peers != None:
         dist.peers = dist_upd.peers
     session.add(dist)
     session.commit()
     session.refresh(dist)
 
-    return {
+    res = {
         'successful': True,
         'meta_file': dist.meta_file,
         'peers': dist.peers
     }    
+    logger.info(f'Func update_DHT: successful, result:\n{res}')
+    return res
 
-@app.get('/meta_files/{file_name}') # дополнить для безопасного пользования. Исключить строки, начинающиеся на .., /
+@app.get('/meta_files/{file_name}') # дополнить для безопасного пользования. Исключить строки, содержащие
 def download_file(file_name: str):
     """Скачивает файл с именем file_name из директории meta_files.
     
@@ -117,6 +132,7 @@ def download_file(file_name: str):
     Returns:
         FileResponse"""
     file_path = os.path.join(UPLOAD_DIR, file_name)
+    logger.info(f'Func download_file: successful, result:\n{file_name}')
     return FileResponse(path=file_path, media_type='application/octet-stream')
 
 @app.post("/upload/")
@@ -125,9 +141,9 @@ async def upload_file(file: UploadFile = File(...)):
     
     Args:
         file (UploadFile): содержит информацию о пользовательском файле."""
+    os.makedirs("meta_files", exist_ok=True)
     file_path = os.path.join(UPLOAD_DIR, file.filename)
-
     with open(file_path, 'wb') as f:
         shutil.copyfileobj(file.file, f) # копирует содержимое файла file.file в файл по пути file_path.
-    
+    logger.info(f'Func upload_file: successful, result:\n{file.filename}')
     return {'file_name': file.filename}
